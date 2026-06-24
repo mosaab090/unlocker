@@ -158,70 +158,7 @@ end
 local FighterController
 pcall(function() FighterController = require(controllers:WaitForChild("FighterController", 10)) end)
 
-if hookmetamethod then
-    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-    local dataRemotes = remotes and remotes:FindFirstChild("Data")
-    local equipRemote = dataRemotes and dataRemotes:FindFirstChild("EquipCosmetic")
-    local favoriteRemote = dataRemotes and dataRemotes:FindFirstChild("FavoriteCosmetic")
-    local replicationRemotes = remotes and remotes:FindFirstChild("Replication")
-    local fighterRemotes = replicationRemotes and replicationRemotes:FindFirstChild("Fighter")
-    local useItemRemote = fighterRemotes and fighterRemotes:FindFirstChild("UseItem")
-    
-    if equipRemote then
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            if getnamecallmethod() ~= "FireServer" then return oldNamecall(self, ...) end
-            local args = {...}
-            if useItemRemote and self == useItemRemote then
-                local objectID = args[1]
-                if FighterController then
-                    pcall(function()
-                        local fighter = FighterController:GetFighter(player)
-                        if fighter and fighter.Items then
-                            for _, item in pairs(fighter.Items) do
-                                if item:Get("ObjectID") == objectID then lastUsedWeapon = item.Name break end
-                            end
-                        end
-                    end)
-                end
-            end
-            if self == equipRemote then
-                local weaponName, cosmeticType, cosmeticName, options = args[1], args[2], args[3], args[4] or {}
-                -- EXCLURE LES FINISHERS
-                if cosmeticType ~= "Skin" then return oldNamecall(self, ...) end
-                if cosmeticName and cosmeticName ~= "None" and cosmeticName ~= "" then
-                    local inventory = DataController:Get("CosmeticInventory")
-                    if inventory and rawget(inventory, cosmeticName) then return oldNamecall(self, ...) end
-                end
-                equipped[weaponName] = equipped[weaponName] or {}
-                if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
-                    equipped[weaponName][cosmeticType] = nil
-                    if not next(equipped[weaponName]) then equipped[weaponName] = nil end
-                else
-                    local cloned = cloneCosmetic(cosmeticName, cosmeticType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
-                    if cloned then equipped[weaponName][cosmeticType] = cloned end
-                end
-                task.defer(function()
-                    pcall(function() DataController.CurrentData:Replicate("WeaponInventory") end)
-                    task.wait(0.2)
-                    saveConfig()
-                end)
-                return
-            end
-            if self == favoriteRemote then
-                local cosmetic = CosmeticLibrary.Cosmetics[args[2]]
-                if cosmetic and cosmetic.Type == "Skin" then
-                    favorites[args[1]] = favorites[args[1]] or {}
-                    favorites[args[1]][args[2]] = args[3] or nil
-                    saveConfig()
-                    task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
-                end
-                return
-            end
-            return oldNamecall(self, ...)
-        end)
-    end
-end
+
 
 local ClientItem
 pcall(function() ClientItem = require(player.PlayerScripts.Modules.ClientReplicatedClasses.ClientFighter.ClientItem) end)
@@ -335,53 +272,7 @@ DataController.GetWeaponData = function(self, weaponName)
     return merged
 end
 
-if hookmetamethod then
-    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-    local dataRemotes = remotes and remotes:FindFirstChild("Data")
-    local equipRemote = dataRemotes and dataRemotes:FindFirstChild("EquipCosmetic")
-    local favoriteRemote = dataRemotes and dataRemotes:FindFirstChild("FavoriteCosmetic")
-    
-    if equipRemote then
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            if getnamecallmethod() ~= "FireServer" then return oldNamecall(self, ...) end
-            local args = {...}
-            if self == equipRemote then
-                local weaponName, cosmeticType, cosmeticName, options = args[1], args[2], args[3], args[4] or {}
-                if cosmeticType ~= "Charm" then return oldNamecall(self, ...) end
-                if cosmeticName and cosmeticName ~= "None" and cosmeticName ~= "" then
-                    local inventory = DataController:Get("CosmeticInventory")
-                    if inventory and rawget(inventory, cosmeticName) then return oldNamecall(self, ...) end
-                end
-                equipped[weaponName] = equipped[weaponName] or {}
-                if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
-                    equipped[weaponName][cosmeticType] = nil
-                    if not next(equipped[weaponName]) then equipped[weaponName] = nil end
-                else
-                    local cloned = cloneCosmetic(cosmeticName, cosmeticType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
-                    if cloned then equipped[weaponName][cosmeticType] = cloned end
-                end
-                task.defer(function()
-                    pcall(function() DataController.CurrentData:Replicate("WeaponInventory") end)
-                    task.wait(0.2)
-                    saveConfig()
-                end)
-                return
-            end
-            if self == favoriteRemote then
-                local cosmetic = CosmeticLibrary.Cosmetics[args[2]]
-                if cosmetic and (cosmetic.Type == "Charm" or args[2]:lower():find("charm")) then
-                    favorites[args[1]] = favorites[args[1]] or {}
-                    favorites[args[1]][args[2]] = args[3] or nil
-                    saveConfig()
-                    task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
-                end
-                return
-            end
-            return oldNamecall(self, ...)
-        end)
-    end
-end
+
 
 if ClientItem and ClientItem._CreateViewModel then
     local originalCreateViewModelCharm = ClientItem._CreateViewModel
@@ -485,50 +376,7 @@ DataController.GetWeaponData = function(self, weaponName)
     return merged
 end
 
-if hookmetamethod then
-    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-    local dataRemotes = remotes and remotes:FindFirstChild("Data")
-    local equipRemote = dataRemotes and dataRemotes:FindFirstChild("EquipCosmetic")
-    local favoriteRemote = dataRemotes and dataRemotes:FindFirstChild("FavoriteCosmetic")
-    
-    if equipRemote then
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            if getnamecallmethod() ~= "FireServer" then return oldNamecall(self, ...) end
-            local args = {...}
-            if self == equipRemote then
-                local weaponName, cosmeticType, cosmeticName, options = args[1], args[2], args[3], args[4] or {}
-                if cosmeticType == "Dance" or cosmeticType == "Emote" or (cosmeticName and (cosmeticName:lower():find("dance") or cosmeticName:lower():find("emote"))) then
-                    equipped.Dances = equipped.Dances or {}
-                    if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
-                        equipped.Dances[cosmeticType] = nil
-                    else
-                        local cloned = cloneCosmetic(cosmeticName, cosmeticType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
-                        if cloned then equipped.Dances[cosmeticType] = cloned end
-                    end
-                    task.defer(function()
-                        pcall(function() DataController.CurrentData:Replicate("CosmeticInventory") end)
-                        task.wait(0.2)
-                        saveConfig()
-                    end)
-                    return
-                end
-                return oldNamecall(self, ...)
-            end
-            if self == favoriteRemote then
-                local cosmetic = CosmeticLibrary.Cosmetics[args[2]]
-                if cosmetic and (cosmetic.Type == "Dance" or cosmetic.Type == "Emote" or args[2]:lower():find("dance") or args[2]:lower():find("emote")) then
-                    favorites[args[1]] = favorites[args[1]] or {}
-                    favorites[args[1]][args[2]] = args[3] or nil
-                    saveConfig()
-                    task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
-                end
-                return
-            end
-            return oldNamecall(self, ...)
-        end)
-    end
-end
+
 
 local EmoteController
 pcall(function() 
@@ -610,53 +458,7 @@ DataController.GetWeaponData = function(self, weaponName)
     return merged
 end
 
-if hookmetamethod then
-    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-    local dataRemotes = remotes and remotes:FindFirstChild("Data")
-    local equipRemote = dataRemotes and dataRemotes:FindFirstChild("EquipCosmetic")
-    local favoriteRemote = dataRemotes and dataRemotes:FindFirstChild("FavoriteCosmetic")
-    
-    if equipRemote then
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            if getnamecallmethod() ~= "FireServer" then return oldNamecall(self, ...) end
-            local args = {...}
-            if self == equipRemote then
-                local weaponName, cosmeticType, cosmeticName, options = args[1], args[2], args[3], args[4] or {}
-                if cosmeticType ~= "Wrap" and cosmeticType ~= "Wrapping" then return oldNamecall(self, ...) end
-                if cosmeticName and cosmeticName ~= "None" and cosmeticName ~= "" then
-                    local inventory = DataController:Get("CosmeticInventory")
-                    if inventory and rawget(inventory, cosmeticName) then return oldNamecall(self, ...) end
-                end
-                equipped[weaponName] = equipped[weaponName] or {}
-                if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
-                    equipped[weaponName][cosmeticType] = nil
-                    if not next(equipped[weaponName]) then equipped[weaponName] = nil end
-                else
-                    local cloned = cloneCosmetic(cosmeticName, cosmeticType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
-                    if cloned then equipped[weaponName][cosmeticType] = cloned end
-                end
-                task.defer(function()
-                    pcall(function() DataController.CurrentData:Replicate("WeaponInventory") end)
-                    task.wait(0.2)
-                    saveConfig()
-                end)
-                return
-            end
-            if self == favoriteRemote then
-                local cosmetic = CosmeticLibrary.Cosmetics[args[2]]
-                if cosmetic and (cosmetic.Type == "Wrap" or cosmetic.Type == "Wrapping" or args[2]:lower():find("wrap")) then
-                    favorites[args[1]] = favorites[args[1]] or {}
-                    favorites[args[1]][args[2]] = args[3] or nil
-                    saveConfig()
-                    task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
-                end
-                return
-            end
-            return oldNamecall(self, ...)
-        end)
-    end
-end
+
 
 if ClientItem and ClientItem._CreateViewModel then
     local originalCreateViewModelWrap = ClientItem._CreateViewModel
@@ -889,104 +691,69 @@ DataController.GetWeaponData = function(self, weaponName)
     return merged
 end
 
+
+
 -- ============================================================================
--- FINISHERS — __namecall (EquipCosmetic / FavoriteCosmetic)
+-- FINISHERS — FighterController.GetFighter injection (cached)
 -- ============================================================================
-local finRemotes = ReplicatedStorage:FindFirstChild("Remotes")
-local finDataRemotes = finRemotes and finRemotes:FindFirstChild("Data")
-local finEquipRemote = finDataRemotes and finDataRemotes:FindFirstChild("EquipCosmetic")
-local finFavRemote = finDataRemotes and finDataRemotes:FindFirstChild("FavoriteCosmetic")
+local finisherItemCache = nil
+local finisherCacheDirty = true
 
-if hookmetamethod and finEquipRemote then
-    local oldFinNamecall
-    oldFinNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        if getnamecallmethod() ~= "FireServer" then return oldFinNamecall(self, ...) end
-        local args = {...}
-
-        if finEquipRemote and self == finEquipRemote then
-            local weaponName, cosmeticType, cosmeticName, options = args[1], args[2], args[3], args[4] or {}
-            local cosmetic = cosmeticName and CosmeticLibrary.Cosmetics[cosmeticName]
-            if not (cosmetic and isFinisher(cosmetic, cosmeticName)) then
-                return oldFinNamecall(self, ...)
+local function rebuildFinisherCache()
+    finisherItemCache = {}
+    for name, cosmetic in pairs(CosmeticLibrary.Cosmetics) do
+        if isFinisher(cosmetic, name) then
+            local objectID = cosmetic.ObjectID
+            if not objectID and EnumLibrary then
+                local ok, eid = pcall(EnumLibrary.ToEnum, EnumLibrary, name)
+                if ok and eid then objectID = eid end
             end
-            if cosmeticName and cosmeticName ~= "None" and cosmeticName ~= "" then
-                local inventory = DataController:Get("CosmeticInventory")
-                if inventory and rawget(inventory, cosmeticName) then return oldFinNamecall(self, ...) end
+            if objectID then
+                table.insert(finisherItemCache, {
+                    Name = name,
+                    ObjectID = objectID,
+                    Cosmetic = cosmetic,
+                })
             end
-            finEquipped[weaponName] = finEquipped[weaponName] or {}
-            if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
-                for ct, cd in pairs(finEquipped[weaponName]) do
-                    local c = CosmeticLibrary.Cosmetics[cd.Name]
-                    if c and isFinisher(c, cd.Name) then finEquipped[weaponName][ct] = nil end
-                end
-                if not next(finEquipped[weaponName]) then finEquipped[weaponName] = nil end
-            else
-                local actualType = cosmetic.Type or cosmeticType
-                local cloned = cloneCosmetic(cosmeticName, actualType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
-                if cloned then finEquipped[weaponName][actualType] = cloned end
-            end
-            finisherConfigDirty = true
-            task.defer(function() pcall(function() DataController.CurrentData:Replicate("WeaponInventory") end) end)
-            return
         end
-
-        if finFavRemote and self == finFavRemote then
-            local cosmetic = CosmeticLibrary.Cosmetics[args[2]]
-            if cosmetic and isFinisher(cosmetic, args[2]) then
-                finFavorites[args[1]] = finFavorites[args[1]] or {}
-                finFavorites[args[1]][args[2]] = args[3] or nil
-                finisherConfigDirty = true
-                task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
-            end
-            return
-        end
-
-        return oldFinNamecall(self, ...)
-    end)
+    end
+    finisherCacheDirty = false
 end
 
--- ============================================================================
--- FINISHERS — FighterController.GetFighter injection
--- ============================================================================
 if FighterController then
     local prevGetFighterFin = FighterController.GetFighter
     if prevGetFighterFin then
         FighterController.GetFighter = function(self, plr)
             local fighter = prevGetFighterFin(self, plr)
             if plr == player and fighter and fighter.Items then
+                if finisherCacheDirty then rebuildFinisherCache() end
                 local existingIDs = {}
                 for _, item in pairs(fighter.Items) do
                     local oid = item.Get and item:Get("ObjectID")
                     if oid then existingIDs[oid] = true end
                 end
                 local currentWeapon = constructingFinisher
-                for name, cosmetic in pairs(CosmeticLibrary.Cosmetics) do
-                    if isFinisher(cosmetic, name) then
-                        local objectID = cosmetic.ObjectID
-                        if not objectID and EnumLibrary then
-                            local ok, eid = pcall(EnumLibrary.ToEnum, EnumLibrary, name)
-                            if ok and eid then objectID = eid end
+                for _, cached in pairs(finisherItemCache) do
+                    if not existingIDs[cached.ObjectID] then
+                        local shouldAdd = true
+                        if currentWeapon and finEquipped[currentWeapon] then
+                            local found = false
+                            for _, cd in pairs(finEquipped[currentWeapon]) do
+                                if cd.Name == cached.Name then found = true; break end
+                            end
+                            shouldAdd = found
                         end
-                        if objectID and not existingIDs[objectID] then
-                            local shouldAdd = true
-                            if currentWeapon and finEquipped[currentWeapon] then
-                                local found = false
-                                for _, cd in pairs(finEquipped[currentWeapon]) do
-                                    if cd.Name == name then found = true; break end
+                        if shouldAdd then
+                            local name, objectID, cosmetic = cached.Name, cached.ObjectID, cached.Cosmetic
+                            table.insert(fighter.Items, {
+                                Name = name, ObjectID = objectID,
+                                Get = function(_, key)
+                                    if key == "ObjectID" then return objectID
+                                    elseif key == "Name" then return name
+                                    elseif key == "Type" then return cosmetic.Type end
                                 end
-                                shouldAdd = found
-                            end
-                            if shouldAdd then
-                                table.insert(fighter.Items, {
-                                    Name = name, ObjectID = objectID,
-                                    Get = function(_, key)
-                                        if key == "ObjectID" then return objectID
-                                        elseif key == "Name" then return name
-                                        elseif key == "Type" then return cosmetic.Type end
-                                    end
-                                })
-                                existingIDs[objectID] = true
-                            end
+                            })
+                            existingIDs[objectID] = true
                         end
                     end
                 end
@@ -1224,9 +991,11 @@ local function removeSkyPreset()
 end
 
 -- ============================================================================
--- DARK TEXTURES / LOW-POLY APPLY
+-- DARK TEXTURES / LOW-POLY APPLY (with incremental update)
 -- ============================================================================
-local function applyDarkTextures()
+local darkTexturesApplied = false
+local function applyDarkTextures(fullScan)
+    if darkTexturesApplied and not fullScan then return end
     pcall(function()
         for _, v in pairs(workspace:GetDescendants()) do
             if (v:IsA("BasePart") or v:IsA("MeshPart") or v:IsA("UnionOperation")) and not v:IsA("Terrain") then
@@ -1246,8 +1015,26 @@ local function applyDarkTextures()
             terrain.WaterReflectance = 0
         end
         pcall(function() game:GetService("UserGameSettings").MasterVolume = 0.3 end)
+        darkTexturesApplied = true
     end)
 end
+
+workspace.DescendantAdded:Connect(function(v)
+    if darkTexturesApplied and visualsEnabled then
+        pcall(function()
+            if (v:IsA("BasePart") or v:IsA("MeshPart") or v:IsA("UnionOperation")) and not v:IsA("Terrain") then
+                v.Material = Enum.Material.SmoothPlastic
+                v.Reflectance = 0
+            elseif v:IsA("Decal") or v:IsA("Texture") then
+                v.Transparency = 0.7
+            elseif v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") then
+                v.Enabled = false
+            elseif v:IsA("Water") and not v:IsA("Terrain") then
+                v.Transparency = 0.9; v.Reflectance = 0
+            end
+        end)
+    end
+end)
 
 local function removeDarkTextures()
     -- Can't easily undo material changes, skip
@@ -1275,27 +1062,21 @@ local function removeBlur()
 end
 
 -- ============================================================================
--- AUTO-REAPPLY LOOP (every 30s + on respawn)
+-- AUTO-REAPPLY (on respawn + every 60s)
 -- ============================================================================
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if not player or not player.Character then
-                task.wait(3)
-                if visualsEnabled then
-                    applyDarkTextures()
-                    removeBlur()
-                end
-            end
-        end)
+player.CharacterAdded:Connect(function()
+    task.wait(3)
+    if visualsEnabled then
+        task.spawn(applyDarkTextures, true)
+        task.spawn(removeBlur)
     end
 end)
 
 task.spawn(function()
-    while task.wait(30) do
+    while task.wait(60) do
         if visualsEnabled then
-            task.spawn(applyDarkTextures)
-            task.spawn(removeBlur)
+            applyDarkTextures()
+            removeBlur()
         end
     end
 end)
@@ -1353,34 +1134,7 @@ local function createWatermark()
     end)
 end
 
--- ============================================================================
--- AUTO-RECONNECT
--- ============================================================================
-local reconnectAttempts = 0
-local function setupAutoReconnect()
-    pcall(function()
-        local mt = getrawmetatable(game)
-        if not mt then return end
-        local oldNamecallRecon
-        oldNamecallRecon = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            if method == "Kick" then
-                task.spawn(function()
-                    if reconnectAttempts < 3 then
-                        reconnectAttempts = reconnectAttempts + 1
-                        NotificationLib:Notify("Reconectando", "Tentativa " .. reconnectAttempts .. "/3", 2)
-                        task.wait(2)
-                        pcall(function()
-                            TeleportService:Teleport(game.PlaceId, player)
-                        end)
-                    end
-                end)
-                return
-            end
-            return oldNamecallRecon(self, ...)
-        end)
-    end)
-end
+
 
 -- ============================================================================
 -- KEYBIND TOGGLE
@@ -1410,7 +1164,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             visualsEnabled = not visualsEnabled
             if visualsEnabled then
                 applySkyPreset(currentSkyPreset)
-                applyDarkTextures()
+                applyDarkTextures(true)
                 removeBlur()
             else
                 removeSkyPreset()
@@ -1501,7 +1255,7 @@ if UserInputService.TouchEnabled then
                             visualsEnabled = not visualsEnabled
                             if visualsEnabled then
                                 applySkyPreset(currentSkyPreset)
-                                applyDarkTextures()
+                                applyDarkTextures(true)
                                 removeBlur()
                                 btn.BackgroundTransparency = 0.35
                             else
@@ -1531,6 +1285,153 @@ pcall(function()
 end)
 
 -- ============================================================================
+-- SINGLE COMBINED __NAMECALL HOOK
+-- ============================================================================
+if hookmetamethod then
+    local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+    local dataRemotes = remotes and remotes:FindFirstChild("Data")
+    local equipRemote = dataRemotes and dataRemotes:FindFirstChild("EquipCosmetic")
+    local favoriteRemote = dataRemotes and dataRemotes:FindFirstChild("FavoriteCosmetic")
+    local replicationRemotes = remotes and remotes:FindFirstChild("Replication")
+    local fighterRemotes = replicationRemotes and replicationRemotes:FindFirstChild("Fighter")
+    local useItemRemote = fighterRemotes and fighterRemotes:FindFirstChild("UseItem")
+    local reconnectAttempts = 0
+
+    local oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+
+        -- Kick interception (auto-reconnect)
+        if method == "Kick" then
+            task.spawn(function()
+                if reconnectAttempts < 3 then
+                    reconnectAttempts = reconnectAttempts + 1
+                    if NotificationLib then
+                        NotificationLib:Notify("Reconectando", "Tentativa " .. reconnectAttempts .. "/3", 2)
+                    end
+                    task.wait(2)
+                    pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+                end
+            end)
+            return
+        end
+
+        if method ~= "FireServer" then return oldNamecall(self, ...) end
+
+        -- useItemRemote tracking
+        if useItemRemote and self == useItemRemote then
+            local objectID = args[1]
+            if FighterController then
+                pcall(function()
+                    local fighter = FighterController:GetFighter(player)
+                    if fighter and fighter.Items then
+                        for _, item in pairs(fighter.Items) do
+                            if item.Get and item:Get("ObjectID") == objectID then lastUsedWeapon = item.Name break end
+                        end
+                    end
+                end)
+            end
+        end
+
+        -- EquipCosmetic
+        if equipRemote and self == equipRemote then
+            local weaponName, cosmeticType, cosmeticName, options = args[1], args[2], args[3], args[4] or {}
+            local cosmetic = cosmeticName and CosmeticLibrary.Cosmetics[cosmeticName]
+
+            if cosmeticName and cosmeticName ~= "None" and cosmeticName ~= "" then
+                local inventory = DataController:Get("CosmeticInventory")
+                if inventory and rawget(inventory, cosmeticName) then return oldNamecall(self, ...) end
+            end
+
+            -- Finisher
+            if cosmetic and isFinisher(cosmetic, cosmeticName) then
+                finEquipped[weaponName] = finEquipped[weaponName] or {}
+                if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
+                    for ct, cd in pairs(finEquipped[weaponName]) do
+                        local c = CosmeticLibrary.Cosmetics[cd.Name]
+                        if c and isFinisher(c, cd.Name) then finEquipped[weaponName][ct] = nil end
+                    end
+                    if not next(finEquipped[weaponName]) then finEquipped[weaponName] = nil end
+                else
+                    local actualType = cosmetic.Type or cosmeticType
+                    local cloned = cloneCosmetic(cosmeticName, actualType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
+                    if cloned then finEquipped[weaponName][actualType] = cloned end
+                end
+                finisherConfigDirty = true
+                finisherCacheDirty = true
+                task.defer(function() pcall(function() DataController.CurrentData:Replicate("WeaponInventory") end) end)
+                return
+            end
+
+            -- Dance / Emote
+            if cosmeticType == "Dance" or cosmeticType == "Emote" or (cosmeticName and (cosmeticName:lower():find("dance") or cosmeticName:lower():find("emote"))) then
+                equipped.Dances = equipped.Dances or {}
+                if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
+                    equipped.Dances[cosmeticType] = nil
+                else
+                    local cloned = cloneCosmetic(cosmeticName, cosmeticType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
+                    if cloned then equipped.Dances[cosmeticType] = cloned end
+                end
+                task.defer(function()
+                    pcall(function() DataController.CurrentData:Replicate("CosmeticInventory") end)
+                    task.wait(0.2)
+                    saveConfig()
+                end)
+                return
+            end
+
+            -- Skin / Charm / Wrap
+            if cosmeticType ~= "Skin" and cosmeticType ~= "Charm" and cosmeticType ~= "Wrap" and cosmeticType ~= "Wrapping" then
+                return oldNamecall(self, ...)
+            end
+            equipped[weaponName] = equipped[weaponName] or {}
+            if not cosmeticName or cosmeticName == "None" or cosmeticName == "" then
+                equipped[weaponName][cosmeticType] = nil
+                if not next(equipped[weaponName]) then equipped[weaponName] = nil end
+            else
+                local cloned = cloneCosmetic(cosmeticName, cosmeticType, {inverted = options.IsInverted, favoritesOnly = options.OnlyUseFavorites})
+                if cloned then equipped[weaponName][cosmeticType] = cloned end
+            end
+            task.defer(function()
+                pcall(function() DataController.CurrentData:Replicate("WeaponInventory") end)
+                task.wait(0.2)
+                saveConfig()
+            end)
+            return
+        end
+
+        -- FavoriteCosmetic
+        if favoriteRemote and self == favoriteRemote then
+            local cosmetic = CosmeticLibrary.Cosmetics[args[2]]
+            if not cosmetic then return oldNamecall(self, ...) end
+            local weapon, name, isFav = args[1], args[2], args[3]
+
+            -- Finisher favorites
+            if isFinisher(cosmetic, name) then
+                finFavorites[weapon] = finFavorites[weapon] or {}
+                finFavorites[weapon][name] = isFav or nil
+                finisherConfigDirty = true
+                task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
+                return
+            end
+
+            -- Skin / Charm / Dance / Emote / Wrap favorites
+            local t = cosmetic.Type or ""
+            if t == "Skin" or t == "Charm" or t == "Dance" or t == "Emote" or t == "Wrap" or t == "Wrapping"
+                or name:lower():find("charm") or name:lower():find("dance") or name:lower():find("emote") or name:lower():find("wrap") then
+                favorites[weapon] = favorites[weapon] or {}
+                favorites[weapon][name] = isFav or nil
+                saveConfig()
+                task.spawn(function() pcall(function() DataController.CurrentData:Replicate("FavoritedCosmetics") end) end)
+                return
+            end
+        end
+
+        return oldNamecall(self, ...)
+    end)
+end
+
+-- ============================================================================
 -- INIT
 -- ============================================================================
 loadConfig()
@@ -1541,13 +1442,12 @@ if visualsEnabled then
     task.spawn(function()
         task.wait(0.5)
         applySkyPreset(currentSkyPreset)
-        applyDarkTextures()
+        applyDarkTextures(true)
         removeBlur()
     end)
 end
 
 createWatermark()
-setupAutoReconnect()
 
 local finisherTypeCount = 0
 if finisherTypes then
